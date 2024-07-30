@@ -39,8 +39,7 @@
 
     <py-script>
         from bs4 import BeautifulSoup
-        from js import Uint8Array, Blob, URL, document
-        import io
+        from js import Blob, URL, document
 
         vocabulary_data = []  # Define vocabulary_data globally
 
@@ -49,12 +48,10 @@
             soup = BeautifulSoup(html_content, 'html.parser')
             vocabulary_data.clear()  # Clear the previous data
             flashcard_previews = soup.find_all('app-flashcard-preview')
-
             for flashcard in flashcard_previews:
                 german_translation = flashcard.find_all('div', class_='viewer')[0].get_text(strip=True)
                 english_translation = flashcard.find_all('div', class_='viewer')[1].get_text(strip=True)
                 vocabulary_data.append((german_translation, english_translation))
-            
             return vocabulary_data
 
         def process_html(*args, **kwargs):
@@ -73,7 +70,7 @@
             a = document.createElement('a')
             a.href = url
             a.download = 'vocabulary.csv'
-	    a.click()
+            a.click()
 
         process_btn = Element('process-btn')
         process_btn.element.onclick = process_html
