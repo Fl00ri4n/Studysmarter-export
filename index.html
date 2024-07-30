@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudySmarter Vocabulary Extractor</title>
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css">
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <style>
+        textarea, pre {
+            width: 50%;
+            height: 25vh;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            overflow: auto;
+            box-sizing: border-box;
+        }
+        #output {
+            resize: both;
+            width: 50%;
+            height: 25vh;
+        }
+    </style>
+</head>
+<body>
+    <h1>HTML to Vocabulary Extractor</h1>
+    <textarea id="html-input" placeholder="Paste your HTML content here"></textarea>
+    <br><br>
+    <button id="process-btn">Extract Vocabulary</button>
+    <h2>Extracted Vocabulary</h2>
+    <pre id="output"></pre>
+    <button id="download-btn">Download as CSV</button>
+
+    <py-config>
+        packages = ["beautifulsoup4"]
+    </py-config>
+
+    <py-script>
+        from bs4 import BeautifulSoup
+        from js import Uint8Array, Blob, URL, document
+        import io
+
+        vocabulary_data = []  # Define vocabulary_data globally
+
+        def extract_vocabulary(html_content):
+            global vocabulary_data  # Access the global variable
+            soup = BeautifulSoup(html_content, 'html.parser')
+            vocabulary_data.clear()  # Clear the previous data
+            flashcard_previews = soup.find_all('app-flashcard-preview')
+
+            for flashcard in flashcard_previews:
+                german_translation = flashcard.find_all('div', class_='viewer')[0].get_text(strip=True)
+                english_translation = flashcard.find_all('div', class_='viewer')[1].get_text(strip=True)
+                vocabulary_data.append((german_translation, english_translation))
+            
+            return vocabulary_data
+
+        def process_html(*args, **kwargs):
+            html_input = Element('html-input').element.value
+            output_element = Element('output')
+            global vocabulary_data  # Access the global variable
+            extract_vocabulary(html_input)  # Update vocabulary_data
+            output_text = "\n".join([f'{german};{english}' for german, english in vocabulary_data])
+            output_element.write(output_text)
+
+        def download_csv(*args, **kwargs):
+            global vocabulary_data
+            csv_content = '\n'.join([f'{german},{english}' for german, english in vocabulary_data])
+            blob = Blob.new([csv_content], { 'type': 'text/csv' })
+            url = URL.createObjectURL(blob)
+            a = document.createElement('a')
+            a.href = url
+            a.download = 'vocabulary.csv'
+			a.click()
+
+        process_btn = Element('process-btn')
+        process_btn.element.onclick = process_html
+
+        download_btn = Element('download-btn')
+        download_btn.element.onclick = download_csv
+    </py-script>
+</body>
+</html>
